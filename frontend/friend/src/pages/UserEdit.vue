@@ -9,7 +9,7 @@ const editUser = ref({
   editName: route.query.editName
 })
 
-const onSubmit = (values) => {
+const onSubmit = (values: any) => {
   console.log('submit', values);
 };
 </script>

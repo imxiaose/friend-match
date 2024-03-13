@@ -96,7 +96,9 @@ const doSearchResult = ()=>{
       v-model:main-active-index="activeIndex"
       :items
   />
-  <van-button plain type="primary" @click="doSearchResult">朴素按钮</van-button>
+  <div style="padding: 12px">
+  <van-button block plain type="primary" @click="doSearchResult">搜索</van-button>
+  </div>
 </template>
 
 <style scoped>

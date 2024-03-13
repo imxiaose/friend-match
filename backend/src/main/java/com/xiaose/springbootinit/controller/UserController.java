@@ -117,6 +117,12 @@ public class UserController {
         return userVO;
     }
 
+    @GetMapping("/search/tags")
+    public BaseResponse<List<UserVO>> searchUserByTags(@RequestParam(required = false) List<String> tagNameList){
+        List<UserVO> userByTags = userService.getUserByTags(tagNameList);
+        return ResultUtils.success(userByTags);
+    }
+
     private boolean isAdmin(HttpServletRequest request){
         UserVO userSeeion = (UserVO) request.getSession().getAttribute(USER_LOGIN_STATE);
         if (ObjectUtils.isEmpty(userSeeion) || !UserConstant.ADMIN_ROLE.equals(userSeeion.getUserRole())){
