@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
 import {onMounted, ref} from "vue";
-import IAxios from "../plugins/friendMatchAxios"
+import IAxios from "../plugins/friendMatchAxios.ts"
 import qs from 'qs'
 import {Toast} from "vant";
 import {UserType} from "../models/user";

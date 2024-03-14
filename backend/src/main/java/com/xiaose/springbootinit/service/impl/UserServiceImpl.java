@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.xiaose.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
+
 /**
  * @author xiaose
  * @description 针对表【user】的数据库操作Service实现
@@ -145,6 +147,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     }
 
+    @Override
+    public Integer updateUser(User user, User loginUser) {
+        Long userId = user.getId();
+        if (userId == null || userId<=0){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+        if (!isAdmin(loginUser) && !userId.equals(loginUser.getId())){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null){
+            throw new BusinessException(ErrorCode.OPERATION_ERROR);
+        }
+
+        return userMapper.updateById(user);
+    }
+
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        Object UserVO = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (null == UserVO){
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        User user = new User();
+        BeanUtils.copyProperties(UserVO,user) ;
+        return user;
+    }
+
     /**
      * 获取一个密码加盐后的用户
      * @param userAccount 用户账号
@@ -158,6 +192,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(newPassword);
         return user;
     }
+
+    @Override
+    public boolean isAdmin(HttpServletRequest request){
+        UserVO userSeeion = (UserVO) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (ObjectUtils.isEmpty(userSeeion) || !UserConstant.ADMIN_ROLE.equals(userSeeion.getUserRole())){
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isAdmin(User loginUser){
+
+        if (ObjectUtils.isEmpty(loginUser) || !UserConstant.ADMIN_ROLE.equals(loginUser.getUserRole())){
+            return false;
+        }
+        return true;
+    }
+
 
 
 

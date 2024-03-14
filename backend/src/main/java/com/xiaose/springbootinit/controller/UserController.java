@@ -11,6 +11,7 @@ import com.xiaose.springbootinit.model.dto.UserLoginDTO;
 import com.xiaose.springbootinit.model.dto.UserRegisterDTO;
 import com.xiaose.springbootinit.model.vo.UserVO;
 import com.xiaose.springbootinit.service.UserService;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.util.RequestUtil;
 import org.apache.commons.lang3.ObjectUtils;
@@ -55,7 +56,7 @@ public class UserController {
     }
 
     @PostMapping("login")
-    public UserVO userLogin(@RequestBody UserLoginDTO userDTO, HttpServletRequest request){
+    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginDTO userDTO, HttpServletRequest request){
         if (ObjectUtils.isEmpty(userDTO)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"没有获取到用户");
         }
@@ -64,13 +65,13 @@ public class UserController {
                 userDTO.getUserAccount())){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"缺少必要参数");
         }
-        return userService.userLogin(userDTO.getUserAccount(), userDTO.getUserPassword(), request);
+        return ResultUtils.success(userService.userLogin(userDTO.getUserAccount(), userDTO.getUserPassword(), request));
     }
 
     @GetMapping("search")
     public List<UserVO> searchUsers(String username, HttpServletRequest request){
         // 鉴权,仅管理员可以查询
-        if (!isAdmin(request)){
+        if (!userService.isAdmin(request)){
             return new ArrayList<>();
         }
 
@@ -89,7 +90,7 @@ public class UserController {
     @PostMapping("delete")
     public boolean deleteUser(@RequestBody Long id, HttpServletRequest request){
         // 鉴权,仅管理员可以查询
-        if (!isAdmin(request)){
+        if (!userService.isAdmin(request)){
             return false;
         }
         if (null == id|| id < 0){
@@ -99,7 +100,7 @@ public class UserController {
     }
 
     @GetMapping("/getCurrentUser")
-    public UserVO getCurrentUser(HttpServletRequest request) {
+    public BaseResponse<UserVO> getCurrentUser(HttpServletRequest request) {
         HttpSession session = request.getSession();
         UserVO currentUser = (UserVO)session.getAttribute(USER_LOGIN_STATE);
         log.info("currentUser : {}",currentUser);
@@ -114,7 +115,7 @@ public class UserController {
         }
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user,userVO);
-        return userVO;
+        return ResultUtils.success(userVO);
     }
 
     @GetMapping("/search/tags")
@@ -123,12 +124,16 @@ public class UserController {
         return ResultUtils.success(userByTags);
     }
 
-    private boolean isAdmin(HttpServletRequest request){
-        UserVO userSeeion = (UserVO) request.getSession().getAttribute(USER_LOGIN_STATE);
-        if (ObjectUtils.isEmpty(userSeeion) || !UserConstant.ADMIN_ROLE.equals(userSeeion.getUserRole())){
-            return false;
+    @PostMapping("update")
+    public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request){
+        // 1. 参数是否为空
+        if (null == user){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        return true;
+        User loginUser = userService.getLoginUser(request);
+
+        return ResultUtils.success(userService.updateUser(user,loginUser));
     }
+
  
 }

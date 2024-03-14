@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import {useRoute} from "vue-router";
-import {ref} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {onMounted, ref} from "vue";
+import IAxios from "../plugins/friendMatchAxios.ts";
+import {showDialog, showFailToast, showSuccessToast, Toast} from "vant";
+import {getCurrectUser} from "../services/user.ts";
+import {getCurrentUserState} from "../states/user.ts";
 const route = useRoute();
+const router = useRouter();
 
 const editUser = ref({
   editKey: route.query.editKey,
@@ -9,8 +14,29 @@ const editUser = ref({
   editName: route.query.editName
 })
 
-const onSubmit = (values: any) => {
-  console.log('submit', values);
+
+
+const onSubmit = async () => {
+  const currentUser = await getCurrentUserState();
+
+  if (!currentUser){
+    showFailToast("用户未登录")
+    return;
+  }
+
+  const res = await IAxios.post("user/update", {
+        'id':currentUser.id,
+        [editUser.value.editKey as string]: editUser.value.currentValue}
+  )
+  console.log('123123',res)
+
+  if (res.code === 0 && res.data > 0){
+    showSuccessToast("修改成功")
+    router.back();
+  } else {
+    showFailToast("修改失败")
+  }
+
 };
 </script>
 
